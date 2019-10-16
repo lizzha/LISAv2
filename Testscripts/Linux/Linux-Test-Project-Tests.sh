@@ -36,6 +36,7 @@ export LTPROOT="/opt/ltp"
 
 # Clear the old log
 rm -f $LTP_RESULTS $LTP_OUTPUT
+touch $LTP_RESULTS
 
 # Checks what Linux distro we are running on
 GetDistro
@@ -147,15 +148,17 @@ else
     check_exit_status "Install LTP RPM" "exit"
 fi
 
-cd "$TOP_BUILDDIR"
-
 LogMsg "Running LTP..."
-LTP_PARAMS="-p -q -l $LTP_RESULTS -o $LTP_OUTPUT -z $drive_name"
+if [[ -n $drive_name ]]; then
+	LTP_PARAMS="-p -q -l $LTP_RESULTS -o $LTP_OUTPUT -z $drive_name"
+else
+	LTP_PARAMS="-p -q -l $LTP_RESULTS -o $LTP_OUTPUT"
+fi
 
 if [[ "$SKIP_LTP_TESTS" != "" ]];then
     echo "Skipping tests: $SKIP_LTP_TESTS" >> ~/summary.log
     echo "$SKIP_LTP_TESTS" | tr "," "\n" > SKIPFILE
-    LTP_PARAMS="-S ./SKIPFILE $LTP_PARAMS"
+    LTP_PARAMS="-S $TOP_BUILDDIR/SKIPFILE $LTP_PARAMS"
 fi
 
 if [[ "$CUSTOM_LTP_SUITES" != "" ]];then
@@ -175,7 +178,7 @@ fi
 
 # LTP can request input if missing users/groups
 # are detected, the yes command will handle the prompt.
-yes | ./runltp $LTP_PARAMS 2>/dev/null
+yes | $TOP_BUILDDIR/runltp $LTP_PARAMS 2>/dev/null
 
 grep -A 5 "Total Tests" "$LTP_RESULTS" >> ~/summary.log
 if grep FAIL "$LTP_OUTPUT" ; then

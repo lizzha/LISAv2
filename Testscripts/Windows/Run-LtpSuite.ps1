@@ -147,9 +147,18 @@ function Main {
     $resultArr = @()
 
     try {
-        $null = Run-LinuxCmd -Command "bash ${TEST_SCRIPT} > LTP-summary.log 2>&1" `
+        $testJob = Run-LinuxCmd -Command "bash ${TEST_SCRIPT} > LTP-summary.log 2>&1" `
             -Username $user -password $password -ip $AllVmData.PublicIP -Port $AllVmData.SSHPort `
-            -maxRetryCount 1 -runMaxAllowedTime 12600 -runAsSudo
+             -RunInBackground -runAsSudo #-maxRetryCount 1 -runMaxAllowedTime 12600
+
+		Write-LogInfo "Monitoring ltp test run..."
+		while ((Get-Job -Id $testJob).State -eq "Running") {
+			Wait-Time -seconds 60
+			$currentStatus = Run-LinuxCmd -ip $allVMData.PublicIP -port $allVMData.SSHPort `
+				-username $user -password $password -command "tail -1 ltp-results.log" `
+				-runAsSudo
+			Write-LogInfo "Current Test Status: $currentStatus"
+		}
 
         $null = Collect-TestLogs -LogsDestination $LogDir -TestType "sh" `
             -PublicIP $AllVmData.PublicIP -SSHPort $AllVmData.SSHPort `
@@ -158,11 +167,11 @@ function Main {
 
         # The LTP log will be placed under /root on SUSE and RedHat when running TEST_SCRIPT with runAsSudo
         # The NULL.log makes sure cp always work on all distros
-        $null = Run-LinuxCmd -Command "touch /root/NULL.log && \cp -f /root/*.log /home/${user}" `
+        $null = Run-LinuxCmd -Command "touch /root/NULL.log && cp -f /root/*.log /home/${user}" `
                 -Username $user -password $password -ip $AllVmData.PublicIP -Port $AllVmData.SSHPort `
                 -maxRetryCount 1 -runAsSudo -ignoreLinuxExitCode
 
-        $null = Run-LinuxCmd -Command "\cp -f /opt/ltp/VM_properties.csv /home/${user}" `
+        $null = Run-LinuxCmd -Command "cp -f /opt/ltp/VM_properties.csv /home/${user}" `
                 -Username $user -password $password -ip $AllVmData.PublicIP -Port $AllVmData.SSHPort `
                 -maxRetryCount 1 -runAsSudo
 
