@@ -138,9 +138,9 @@ collect_VM_properties
             } else {
                 $resultMap["DataPath"] = "Synthetic"
             }
-            $resultMap["MaxLatency_us"] = $maximumLat
-            $resultMap["AverageLatency_us"] = $averageLat
-            $resultMap["MinLatency_us"] = $minimumLat
+            $resultMap["MaxLatency_us"] = [Decimal]$maximumLat
+            $resultMap["AverageLatency_us"] = [Decimal]$averageLat
+            $resultMap["MinLatency_us"] = [Decimal]$minimumLat
             #Percentile Values are not calculated yet. will be added in future
             $resultMap["Latency95Percentile_us"] = 0
             $resultMap["Latency99Percentile_us"] = 0
