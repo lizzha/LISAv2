@@ -93,8 +93,10 @@ function Main {
             $getNicCmd = ". ./utils.sh &> /dev/null && get_active_nic_name"
             $clientNicName = (Run-LinuxCmd -ip $clientVMData.PublicIP -port $clientVMData.SSHPort `
                 -username "root" -password $password -command $getNicCmd).Trim()
+            Write-LogInfo "Client NIC name: $clientNicName"
             $serverNicName = (Run-LinuxCmd -ip $serverVMData.PublicIP -port $serverVMData.SSHPort `
                 -username "root" -password $password -command $getNicCmd).Trim()
+            Write-LogInfo "Server NIC name: $serverNicName"
         }
 
         if ($serverNicName -eq $clientNicName) {
