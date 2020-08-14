@@ -504,6 +504,8 @@ function Is-VmAlive {
                 $port = $vm.SSHPort
             }
 
+            $out = Write-Output "y" | .\Tools\plink.exe -C -i $global:sshPrivateKey -P $port "$user@$($vm.PublicIP)" "hostname" 2> $null
+
             $out = Test-TCP -testIP $vm.PublicIP -testport $port
             if ($out -ne "True") {
                 Write-LogInfo "Connecting to $($vm.PublicIP) : $port failed."
