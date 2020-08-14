@@ -1127,6 +1127,7 @@ Function Detect-LinuxDistro() {
 		[Parameter(Mandatory=$true)][string]$testVMUser,
 		[string]$testVMPassword
 	)
+    $out = Write-Output "y" | .\Tools\plink.exe -C -i $global:sshPrivateKey -P $SSHPort "$testVMUser@$VIP" "hostname" 2> $null
 
 	$global:InitialKernelVersion = Run-LinuxCmd -ip $VIP -port $SSHPort -username $testVMUser -password $testVMPassword -command "uname -r"
 	Write-LogInfo "Initial Kernel Version: $global:InitialKernelVersion"

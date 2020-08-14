@@ -337,6 +337,7 @@ Function Get-AvailableExecutionFolder([string] $username, [string] $password, [s
 		} else {
 			$output = Write-Output "yes" | .\Tools\plink.exe -C -pw $password -P $port "$username@$ip" "sudo -S bash -c 'if [ ! -d /home/$username ]; then mkdir -p /home/$username; chown -R ${user}: /home/$username; fi; if [ -d /home/$username ]; then echo EXIST; else echo NOTEXIST; fi;'" 2> $null
 		}
+		Write-LogInfo "Output: $output"
 		if ("NOTEXIST" -eq $output) {
 			Write-LogDbg "We can't find or create execution folder /home/$username."
 			Throw "Not find available execution folder."
