@@ -134,8 +134,13 @@ function Collect-TestLogs {
 	}
 
 	Write-LogInfo "TEST SCRIPT SUMMARY ~~~~~~~~~~~~~~~"
+	$count = 5
 	$summary | ForEach-Object {
 		Write-Host $_ -ForegroundColor Gray -BackgroundColor White
+		if ($count -gt 0) {
+			$currentTestResult.TestSummary += New-ResultSummary -testResult $_
+			$count--
+		}
 	}
 	Write-LogInfo "END OF TEST SCRIPT SUMMARY ~~~~~~~~~~~~~~~"
 	return $currentTestResult
