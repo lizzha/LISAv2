@@ -134,7 +134,8 @@ function Collect-TestLogs {
 	}
 
 	Write-LogInfo "TEST SCRIPT SUMMARY ~~~~~~~~~~~~~~~"
-	$count = 5
+	# Add at most 10 lines to test result summary
+	$count = 10
 	$summary | ForEach-Object {
 		Write-Host $_ -ForegroundColor Gray -BackgroundColor White
 		if ($count -gt 0) {
