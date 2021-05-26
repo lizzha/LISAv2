@@ -2414,23 +2414,30 @@ Function Copy-VHDToAnotherStorageAccount ($sourceStorageAccount, $sourceStorageC
 	#
 	# Monitor replication status
 	#
-	while ($CopyingInProgress) {
-		$CopyingInProgress = $false
+	$retry = 10
+	while ($CopyingInProgress -and $retry -gt 0) {
 		$status = Get-AzStorageBlobCopyState -Container $destContainer -Blob $destBlob -Context $destContext
+		$blob = Get-AzStorageBlob -Blob $DestBlob -Container $DestContainer -Context $destContext -ErrorAction Ignore
+		Write-LogDbg "CopyState: $status, blob status: $($blob.ICloudBlob.CopyState.Status)"
 		if (-not $status) {
-			Throw "Cannot get the state of copying blob to storage account $($destContext.StorageAccountName)"
+			$retry--
+			if ($retry -eq 0) {
+				Throw "Cannot get the state of copying blob to storage account $($destContext.StorageAccountName) after $retry attempts"
+			}
+			Write-LogWarn "Cannot get the state of copying blob to storage account $($destContext.StorageAccountName), retrying"
+			Start-Sleep -Seconds 10
+			$null = Start-AzStorageBlobCopy -AbsoluteUri $SasUrl  -DestContainer $destContainer -DestContext $destContext -DestBlob $destBlob -Force
+			continue
 		}
 		if ($status.Status -ne "Success") {
-			$CopyingInProgress = $true
-		}
-		else {
-			Write-LogInfo "Copy $DestBlob --> $($destContext.StorageAccountName) : Done"
-			$retValue = $true
-		}
-		if ($CopyingInProgress) {
 			$copyPercentage = [math]::Round( $(($status.BytesCopied * 100 / $status.TotalBytes)) , 2 )
 			Write-LogInfo "Bytes Copied:$($status.BytesCopied), Total Bytes:$($status.TotalBytes) [ $copyPercentage % ]"
 			Start-Sleep -Seconds 10
+		}
+		else {
+			$CopyingInProgress = $false
+			Write-LogInfo "Copy $DestBlob --> $($destContext.StorageAccountName) : Done"
+			$retValue = $true
 		}
 	}
 	return $retValue
