@@ -2409,7 +2409,7 @@ Function Copy-VHDToAnotherStorageAccount ($sourceStorageAccount, $sourceStorageC
 	} else {
 		# Start the Copy
 		Write-LogInfo "Copy $vhdName --> $($destContext.StorageAccountName) : Running"
-		$null = Start-AzStorageBlobCopy -AbsoluteUri $SasUrl  -DestContainer $destContainer -DestContext $destContext -DestBlob $destBlob -Force
+		$blobState = Start-AzStorageBlobCopy -AbsoluteUri $SasUrl -DestContainer $destContainer -DestContext $destContext -DestBlob $destBlob -Force
 	}
 	#
 	# Monitor replication status
@@ -2418,15 +2418,15 @@ Function Copy-VHDToAnotherStorageAccount ($sourceStorageAccount, $sourceStorageC
 	while ($CopyingInProgress -and $retry -gt 0) {
 		$status = Get-AzStorageBlobCopyState -Container $destContainer -Blob $destBlob -Context $destContext
 		$blob = Get-AzStorageBlob -Blob $DestBlob -Container $DestContainer -Context $destContext -ErrorAction Ignore
-		Write-LogDbg "CopyState: $status, blob status: $($blob.ICloudBlob.CopyState.Status)"
+		Write-LogDbg "CopyState: $status, blob status: $($blob.ICloudBlob.CopyState.Status), blob copy result: $blobState"
 		if (-not $status) {
 			$retry--
 			if ($retry -eq 0) {
-				Throw "Cannot get the state of copying blob to storage account $($destContext.StorageAccountName) after $retry attempts"
+				Throw "Cannot get the state of copying blob to storage account $($destContext.StorageAccountName) after 10 attempts"
 			}
 			Write-LogWarn "Cannot get the state of copying blob to storage account $($destContext.StorageAccountName), retrying"
-			Start-Sleep -Seconds 10
-			$null = Start-AzStorageBlobCopy -AbsoluteUri $SasUrl  -DestContainer $destContainer -DestContext $destContext -DestBlob $destBlob -Force
+			Start-Sleep -Seconds $(Get-Random -Maximum 300 -Minimum 60)
+			$blobState = Start-AzStorageBlobCopy -AbsoluteUri $SasUrl  -DestContainer $destContainer -DestContext $destContext -DestBlob $destBlob -Force
 			continue
 		}
 		if ($status.Status -ne "Success") {
