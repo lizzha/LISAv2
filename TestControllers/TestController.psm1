@@ -618,9 +618,9 @@ Class TestController {
 			$parallelParams["TestIdInParallel"] = $parallelTestId
 			$parallelJob = Start-Job -Name "$parallelTestId" -ScriptBlock { Set-Location "$Using:PSScriptRoot\.."; $params = $Using:parallelParams; .\Run-LisaV2.ps1 @params }
 			$null = $parallelJobIds.Add($parallelJob.Id)
-			# For testing with customized VHD, delay 1s to start parallel jobs to avoid duplicated copy
+			# For testing with customized VHD, delay a few seconds to start parallel jobs to avoid duplicated copy
 			if ($this.ParamsInParallel["OsVHD"]) {
-				Start-Sleep -Seconds 1
+				Start-Sleep -Seconds $(Get-Random -Maximum 10 -Minimum 1)
 			}
 		}
 		$parallelTestSummary = [System.Collections.ArrayList]@()
