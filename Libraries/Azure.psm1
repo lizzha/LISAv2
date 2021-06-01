@@ -133,7 +133,7 @@ Function Assert-ResourceLimitationForDeployment($RGXMLData, [ref]$TargetLocation
 			$testVMSize = $VM.InstanceSize
 		}
 
-		if (!$AllTestVMSizes.$testVMSize) {
+		if (!($AllTestVMSizes.$testVMSize) -or $AllTestVMSizes.$testVMSize.Count -eq 0) {
 			Measure-SubscriptionCapabilities
 		}
 
