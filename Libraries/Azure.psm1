@@ -2425,7 +2425,7 @@ Function Copy-VHDToAnotherStorageAccount ($sourceStorageAccount, $sourceStorageC
 				Throw "Cannot get the state of copying blob to storage account $($destContext.StorageAccountName) after 10 attempts"
 			}
 			Write-LogWarn "Cannot get the state of copying blob to storage account $($destContext.StorageAccountName), retrying"
-			Start-Sleep -Seconds $(Get-Random -Maximum 300 -Minimum 60)
+			Start-Sleep -Seconds $(Get-Random -Maximum 60 -Minimum 10)
 			$blobState = Start-AzStorageBlobCopy -AbsoluteUri $SasUrl  -DestContainer $destContainer -DestContext $destContext -DestBlob $destBlob -Force
 			continue
 		}
