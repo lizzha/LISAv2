@@ -383,10 +383,10 @@ Class AzureController : TestController {
 		$this.TotalCaseNum = ([System.Collections.ArrayList]$AllTests).Count
 
 		# Prepare the OS VHD in the main process of parallel run
-		if ($this.RunInParallel -and !$this.TestIdInParallel -and $this.OsVHD) {
+		if ($this.RunInParallel -and !$this.TestIdInParallel -and $this.OsVHD -and !$this.TestLocation) {
 			$sizeAsserted = @()
-			$location = $null
 			foreach ($test in $AllTests) {
+				$location = $test.SetupConfig.TestLocation
 				foreach ($setupType in $allSetupTypes) {
 					if ($test.SetupConfig.SetupType -eq $setupType.LocalName) {
 						$size = $test.SetupConfig.OverrideVMSize
