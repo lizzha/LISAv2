@@ -365,9 +365,11 @@ Class AzureController : TestController {
 		}
 		$allTestSetupTypes = $AllTests.SetupConfig.SetupType | Sort-Object -Unique
 		$SetupTypeXMLs = Get-ChildItem -Path "$PSScriptRoot\..\XML\VMConfigurations\*.xml"
+		$allSetupTypes = @()
 		foreach ($file in $SetupTypeXMLs.FullName) {
 			$setupXml = [xml]( Get-Content -Path $file)
 			foreach ($SetupType in $setupXml.TestSetup.ChildNodes) {
+				$allSetupTypes += $SetupType
 				if ($allTestSetupTypes -contains $SetupType.LocalName) {
 					$vmSizes = $SetupType.ResourceGroup.VirtualMachine.InstanceSize | Sort-Object -Unique
 					$vmSizes | ForEach-Object {
@@ -379,6 +381,27 @@ Class AzureController : TestController {
 			}
 		}
 		$this.TotalCaseNum = ([System.Collections.ArrayList]$AllTests).Count
+
+		# Prepare the OS VHD in the main process of parallel run
+		if ($this.RunInParallel -and !$this.TestIdInParallel -and $this.OsVHD) {
+			$sizeAsserted = @()
+			$location = $null
+			foreach ($test in $AllTests) {
+				foreach ($setupType in $allSetupTypes) {
+					if ($test.SetupConfig.SetupType -eq $setupType.LocalName) {
+						$size = $test.SetupConfig.OverrideVMSize
+						if (-not $size) {
+							$size = $setupType.ResourceGroup.VirtualMachine.InstanceSize
+						}
+						if (-not $sizeAsserted.contains($size)) {
+							$null = Assert-ResourceLimitationForDeployment -RGXMLData $setupType.ResourceGroup `
+								-TargetLocation ([ref]$location) -CurrentTestData $test
+							$sizeAsserted += $size
+						}
+					}
+				}
+			}
+		}
 	}
 
 	[void] LoadTestCases($WorkingDirectory, $CustomTestParameters) {
