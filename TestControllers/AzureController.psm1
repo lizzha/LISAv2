@@ -397,6 +397,7 @@ Class AzureController : TestController {
 							$null = Assert-ResourceLimitationForDeployment -RGXMLData $setupType.ResourceGroup `
 								-TargetLocation ([ref]$location) -CurrentTestData $test
 							$sizeAsserted += $size
+							$null = Select-StorageAccountByTestLocation -Location $location -CurrentTestData $test
 						}
 					}
 				}
